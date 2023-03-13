@@ -26,19 +26,7 @@
 class ErrorStateKalmanFilter
 {
 public:
-  ErrorStateKalmanFilter(){};
-  // takes as input the  variance of the acceleration and gyro, where _n is the measurement noise,
-  // and _w is the pertibations of the system.
-  ErrorStateKalmanFilter(
-    Eigen::Vector3d a_gravity,
-    const Eigen::Matrix<double, STATE_SIZE, 1>& initialState,
-    const Eigen::Matrix<double, dSTATE_SIZE, dSTATE_SIZE>& initalP,
-    double var_acc,
-    double var_omega,
-    double var_acc_bias,
-    double var_omega_bias,
-    int delayHandling,
-    int bufferL);
+  ErrorStateKalmanFilter();
 
   void initialize(
     Eigen::Vector3d a_gravity,

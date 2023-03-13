@@ -5,73 +5,11 @@
 #define I_3 (Matrix3d::Identity())
 #define I_dx (Matrix<double, dSTATE_SIZE, dSTATE_SIZE>::Identity())
 
-using namespace Eigen;
 using namespace std;
+using namespace Eigen;
 
-ErrorStateKalmanFilter::ErrorStateKalmanFilter(
-  Vector3d a_gravity,
-  const Matrix<double, STATE_SIZE, 1>& initialState,
-  const Matrix<double, dSTATE_SIZE, dSTATE_SIZE>& initalP,
-  double var_acc,
-  double var_omega,
-  double var_acc_bias,
-  double var_omega_bias,
-  int delayHandling,
-  int bufferL)
-  : var_acc_(var_acc),
-    var_omega_(var_omega),
-    var_acc_bias_(var_acc_bias),
-    var_omega_bias_(var_omega_bias),
-    a_gravity_(a_gravity),
-    nominalState_(initialState),
-    P_(initalP)
+ErrorStateKalmanFilter::ErrorStateKalmanFilter()
 {
-  // Jacobian of the state transition: page 59, eqn 269
-  // Precompute constant part only
-  F_x_.setZero();
-  // dPos row
-  F_x_.block<3, 3>(dPOS_IDX, dPOS_IDX) = I_3;
-  // dVel row
-  F_x_.block<3, 3>(dVEL_IDX, dVEL_IDX) = I_3;
-  // dTheta row
-  // dAccelBias row
-  F_x_.block<3, 3>(dAB_IDX, dAB_IDX) = I_3;
-  // dGyroBias row
-  F_x_.block<3, 3>(dGB_IDX, dGB_IDX) = I_3;
-
-  // how to handle delayed messurements.
-  delayHandling_ = delayHandling;
-  bufferL_ = bufferL;
-  recentPtr = 0;
-  firstMeasTime = lTime(INT32_MAX, INT32_MAX);
-
-  // handle time delay methods
-  if (delayHandling_ == larsonAverageIMU || delayHandling_ == larsonFull)
-  {
-    // init circular buffer for IMU
-    imuHistoryPtr_ = new vector<imuMeasurement>(bufferL_);
-    PHistoryPtr_ = new vector<pair<lTime, Matrix<double, dSTATE_SIZE, dSTATE_SIZE>>>(bufferL);
-    for (int i = 0; i < bufferL; i++)
-    {
-      imuHistoryPtr_->at(i).time = lTime(0, 0);
-    }
-    Mptr = new Matrix<double, dSTATE_SIZE, dSTATE_SIZE>;
-  }
-  if (delayHandling_ == larsonNewestIMU)
-  {
-    // init newest value
-    lastImu_.time = lTime(0, 0);
-    Mptr = new Matrix<double, dSTATE_SIZE, dSTATE_SIZE>;
-  }
-  if (delayHandling_ == applyUpdateToNew || delayHandling_ == larsonAverageIMU)
-  {
-    // init circular buffer for state
-    stateHistoryPtr_ = new vector<pair<lTime, Matrix<double, STATE_SIZE, 1>>>(bufferL_);
-    for (int i = 0; i < bufferL; i++)
-    {
-      stateHistoryPtr_->at(i).first = lTime(0, 0);
-    }
-  }
 }
 
 void ErrorStateKalmanFilter::initialize(
